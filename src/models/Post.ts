@@ -5,7 +5,11 @@ export interface IPost extends Document {
   content: string;
   createdAt: Date;
   updatedAt: Date;
-  author: String; // Ссылка на пользователя
+  author: {
+    name: string;
+    email: string;
+    role: string;
+  }; // Ссылка на пользователя
   likes: mongoose.Types.ObjectId[]; // массив ObjectId пользователей
 }
 

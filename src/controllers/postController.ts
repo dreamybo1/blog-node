@@ -58,3 +58,25 @@ export const likePost = async (req: AuthRequest, res: Response) => {
     res.status(400).json({ message: "Failed to like post" });
   }
 };
+
+export const deletePost = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const post = await Post.findById(id)
+    console.log(post);
+    
+    if (
+      post?.author.email === req.user.email
+    ) {
+      await post?.deleteOne()
+      res.status(200).json(`You deleted post ${post?.title}`);
+    } else {
+      res.status(500).json(`You can't delete post ${post?.title} because you are not the author`);
+    }
+  } catch (e) {
+    console.error("Error deleting post:", e);
+    res.status(400).json({ message: "Failed to delete post" });
+  }
+};
+
