@@ -19,10 +19,10 @@ export const createPost = async (req: AuthRequest, res: Response) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const {name, email, role} = req.user
+    const { name, email, role } = req.user;
 
     const post = await Post.create({
-      author: {name, email, role},
+      author: { name, email, role },
       title,
       content,
     });
@@ -40,7 +40,9 @@ export const likePost = async (req: AuthRequest, res: Response) => {
 
     const post = await Post.findById(id);
     if (
-      post?.likes.some((likeUser) => likeUser._id.toString() === req.user._id.toString())
+      post?.likes.some(
+        (likeUser) => likeUser._id.toString() === req.user._id.toString()
+      )
     ) {
       post.likes = post?.likes.filter(
         (likeUser) => likeUser._id.toString() !== req.user._id.toString()
@@ -63,20 +65,21 @@ export const deletePost = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
-    const post = await Post.findById(id)
+    const post = await Post.findById(id);
     console.log(post);
-    
-    if (
-      post?.author.email === req.user.email
-    ) {
-      await post?.deleteOne()
+
+    if (post?.author.email === req.user.email || req.user.role === "admin") {
+      await post?.deleteOne();
       res.status(200).json(`You deleted post ${post?.title}`);
     } else {
-      res.status(500).json(`You can't delete post ${post?.title} because you are not the author`);
+      res
+        .status(500)
+        .json(
+          `You can't delete post ${post?.title} because you are not the author`
+        );
     }
   } catch (e) {
     console.error("Error deleting post:", e);
     res.status(400).json({ message: "Failed to delete post" });
   }
 };
-
