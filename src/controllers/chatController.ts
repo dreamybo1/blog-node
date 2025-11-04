@@ -442,9 +442,9 @@ export const readMessage = async (req: AuthRequest, res: Response) => {
 
       return;
     }
-    // @ts-ignore
     if (
       !chat.messages.some(
+        // @ts-ignore
         (chatMessage) => chatMessage.toString() === message?._id.toString()
       )
     ) {
