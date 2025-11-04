@@ -5,6 +5,7 @@ import usersRouter from "./routes/usersRouter";
 import authRouter from "./routes/authRouter";
 import postRouter from "./routes/postRouter";
 import postsRouter from "./routes/postsRouter";
+import chatsRouter from "./routes/chatsRouter";
 
 import cors from "cors";
 const app = express();
@@ -19,6 +20,7 @@ app.use("/users", usersRouter);
 app.use("/auth", authRouter);
 app.use("/post", postRouter);
 app.use("/posts", postsRouter);
+app.use("/chats", chatsRouter);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello from Express + TypeScript!");
