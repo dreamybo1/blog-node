@@ -184,14 +184,18 @@ export const addMemberToChat = async (req: AuthRequest, res: Response) => {
       return;
     }
 
-    await chat?.updateOne({
-      members: [...chat.members, { user: memberId, role: "member" }],
-    });
-    await chat?.save();
+    const updatedChat = await Chat.findByIdAndUpdate(
+      chat._id,
+      {
+        members: [...chat.members, { user: memberId, role: "member" }],
+      },
+      { new: true } // ← ВОЗВРАЩАЕТ обновлённый документ
+    );
+    
     await user.updateOne({ chats: [...user.chats, chat._id] });
     await user?.save();
 
-    res.status(200).json(`Person ${memberId} added`);
+    res.status(200).json(updatedChat);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
