@@ -28,7 +28,7 @@ const ChatSchema: Schema<IChat> = new Schema(
         },
         isChatMode: {
           type: Boolean,
-          require: true,
+          required: true,
           default: false,
         },
       },

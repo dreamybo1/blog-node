@@ -93,6 +93,7 @@ export const createChat = async (req: AuthRequest, res: Response) => {
         { user: users[0], role: "member" },
       ];
     }
+    
 
     const chat = await Chat.create({
       members,
