@@ -29,7 +29,7 @@ export const editChatName = async (req: AuthRequest, res: Response) => {
       res.status(403).json("Name can`t be empty string");
       return;
     }
-    
+
     if (!chat.isChatMode) {
       const message = await Message.create({
         sender: req.user._id,
@@ -60,9 +60,13 @@ export const editChatName = async (req: AuthRequest, res: Response) => {
       return;
     }
 
-    await chat.updateOne({ name });
-    await chat.save();
-    res.status(200).json(chat);
+    const updatedChat = await Chat.findByIdAndUpdate(
+      chat._id,
+      { name },
+      { new: true } // ← ВОЗВРАЩАЕТ обновлённый документ
+    );
+
+    res.status(200).json(updatedChat);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
@@ -93,13 +97,12 @@ export const createChat = async (req: AuthRequest, res: Response) => {
         { user: users[0], role: "member" },
       ];
     }
-    
 
     const chat = await Chat.create({
       members,
       name: isChatMode ? name : undefined, // имя только для беседы
       messages: [firstMessage._id],
-      isChatMode
+      isChatMode,
     });
 
     await User.updateMany(
@@ -396,8 +399,8 @@ export const deleteMessage = async (req: AuthRequest, res: Response) => {
       return;
     }
     if (
-        !chat.messages.some(
-          // @ts-ignore
+      !chat.messages.some(
+        // @ts-ignore
         (chatMessage) => chatMessage.toString() === message?._id.toString()
       )
     ) {
@@ -440,7 +443,11 @@ export const readMessage = async (req: AuthRequest, res: Response) => {
       return;
     }
     // @ts-ignore
-    if (!chat.messages.some((chatMessage) => chatMessage.toString() === message?._id.toString())) {
+    if (
+      !chat.messages.some(
+        (chatMessage) => chatMessage.toString() === message?._id.toString()
+      )
+    ) {
       res.status(403).json(`Message is not part of chat ${id}`);
 
       return;
