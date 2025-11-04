@@ -99,7 +99,7 @@ export const createChat = async (req: AuthRequest, res: Response) => {
       members,
       name: isChatMode ? name : undefined, // имя только для беседы
       messages: [firstMessage._id],
-      isChatMode,
+      isChatMode
     });
 
     await User.updateMany(

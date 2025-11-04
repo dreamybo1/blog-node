@@ -26,13 +26,13 @@ const ChatSchema: Schema<IChat> = new Schema(
           required: true,
           default: "member",
         },
-        isChatMode: {
-          type: Boolean,
-          required: true,
-          default: false,
-        },
       },
     ],
+    isChatMode: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
     messages: [{ type: Schema.Types.ObjectId, required: true, ref: "Message" }],
     name: { type: String },
   },
