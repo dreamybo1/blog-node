@@ -29,7 +29,7 @@ export const editChatName = async (req: AuthRequest, res: Response) => {
       res.status(403).json("Name can`t be empty string");
       return;
     }
-
+    
     if (!chat.isChatMode) {
       const message = await Message.create({
         sender: req.user._id,
@@ -62,7 +62,7 @@ export const editChatName = async (req: AuthRequest, res: Response) => {
 
     await chat.updateOne({ name });
     await chat.save();
-    res.status(200).json("Chat name updated");
+    res.status(200).json(chat);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
