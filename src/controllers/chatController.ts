@@ -270,16 +270,15 @@ export const changeMemberRole = async (req: AuthRequest, res: Response) => {
     if (
       chat.members.find((member) => member.user._id.toString() === memberId)
     ) {
-      await chat?.updateOne({
+      await Chat.findByIdAndUpdate(id, {
         members: chat.members.map((member) => {
-          if (member.user._id.toString() === memberId) {
+          if (member.user.toString() === memberId) {
             return { ...member, role };
           }
 
           return member;
         }),
       });
-      await chat?.save();
       res.status(200).json(`Person role of ${memberId} updated`);
     } else {
       res.status(403).json(`Person is not member of chat ${id}`);
