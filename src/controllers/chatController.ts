@@ -332,13 +332,21 @@ export const createMessage = async (req: AuthRequest, res: Response) => {
       status,
       sender,
       text: newMsgText,
-      readBy
+      readBy,
+      createdAt,
     } = await Message.create({
       sender: req.user._id,
       text,
     });
 
-    const newMessage = { _id, status, sender, text: newMsgText, readBy };
+    const newMessage = {
+      _id,
+      status,
+      sender,
+      text: newMsgText,
+      readBy,
+      createdAt,
+    };
 
     const chat = await Chat.findById(id);
 
@@ -489,8 +497,10 @@ export const readMessage = async (req: AuthRequest, res: Response) => {
     );
 
     chat.messages[messageIndex].status = "read";
-    chat.messages[messageIndex].readBy = [...chat.messages[messageIndex].readBy, req.user._id];
-
+    chat.messages[messageIndex].readBy = [
+      ...chat.messages[messageIndex].readBy,
+      req.user._id,
+    ];
 
     await chat?.save();
     await message?.updateOne({
