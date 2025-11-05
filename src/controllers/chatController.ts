@@ -40,13 +40,14 @@ export const editChatName = async (req: AuthRequest, res: Response) => {
 
       const newChat = await Chat.create({
         members: chat.members.map((memb) => {
+          console.log(memb.user.toString() === req.user._id.toString());
           if (memb.user.toString() === req.user._id.toString()) {
             return { ...memb, role: "admin" };
           }
 
           return memb;
         }),
-        name, // имя только для беседы
+        name,
         messages: [newMessage],
         isChatMode: true,
       });
@@ -167,13 +168,18 @@ export const addMemberToChat = async (req: AuthRequest, res: Response) => {
       const newMessage = { _id, status, sender, text };
 
       const newChat = await Chat.create({
-        members: chat.members.map((memb) => {
-          if (memb.user === req.user._id) {
-            return { ...memb, role: "admin" };
-          }
+        members: chat.members
+          .map((memb) => {
+            if (memb.user.toString() === req.user._id.toString()) {
+              return { ...memb, role: "admin" };
+            }
 
-          return memb;
-        }),
+            return memb;
+          })
+          .push({
+            user: new mongoose.Types.ObjectId(memberId),
+            role: "member",
+          }),
         messages: [newMessage],
         isChatMode: true,
       });
