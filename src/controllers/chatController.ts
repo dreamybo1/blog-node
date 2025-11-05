@@ -267,19 +267,23 @@ export const changeMemberRole = async (req: AuthRequest, res: Response) => {
       return;
     }
 
-    if (
-      chat.members.find((member) => member.user.toString() === memberId)
-    ) {
-      await Chat.findByIdAndUpdate(id, {
-        members: chat.members.map((member) => {
-          if (member.user.toString() === memberId) {
-            return { ...member, role };
-          }
+    if (chat.members.find((member) => member.user.toString() === memberId)) {
+      const memberIndex = chat.members.findIndex(
+        (m) => m.user.toString() === memberId
+      );
 
-          return member;
-        }),
-      });
-      res.status(200).json(`Person role of ${memberId} updated`);
+      if (memberIndex === -1) {
+        return res.status(403).json(`Person is not member of chat ${id}`);
+      }
+
+      const updatedChat = await Chat.findByIdAndUpdate(
+        id,
+        {
+          $set: { [`members.${memberIndex}.role`]: role },
+        },
+        { new: true }
+      );
+      res.status(200).json(updatedChat);
     } else {
       res.status(403).json(`Person is not member of chat ${id}`);
     }
