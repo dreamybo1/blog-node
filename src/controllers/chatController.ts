@@ -268,7 +268,7 @@ export const changeMemberRole = async (req: AuthRequest, res: Response) => {
     }
 
     if (
-      chat.members.find((member) => member.user._id.toString() === memberId)
+      chat.members.find((member) => member.user.toString() === memberId)
     ) {
       await Chat.findByIdAndUpdate(id, {
         members: chat.members.map((member) => {
