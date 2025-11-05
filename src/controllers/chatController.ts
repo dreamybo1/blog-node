@@ -40,7 +40,7 @@ export const editChatName = async (req: AuthRequest, res: Response) => {
 
       const newChat = await Chat.create({
         members: chat.members.map((memb) => {
-          if (memb.user === req.user._id) {
+          if (memb.user.toString() === req.user._id.toString()) {
             return { ...memb, role: "admin" };
           }
 
