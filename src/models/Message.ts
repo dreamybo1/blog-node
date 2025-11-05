@@ -4,6 +4,7 @@ export interface IMessage extends Document {
   sender: mongoose.Types.ObjectId;
   text: string;
   status: "sent" | "read";
+  readBy: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -11,6 +12,7 @@ export interface IMessage extends Document {
 const MessageSchema: Schema<IMessage> = new Schema(
   {
     sender: { type: Schema.Types.ObjectId, required: true, ref: "User" },
+    readBy: [{ type: Schema.Types.ObjectId, required: true, ref: "User" }],
     text: { type: String, required: true },
     status: {
       type: String,
