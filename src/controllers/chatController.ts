@@ -31,13 +31,13 @@ export const editChatName = async (req: AuthRequest, res: Response) => {
     }
 
     if (!chat.isChatMode) {
-      const { _id, status, sender, text } = await Message.create({
-        sender: req.user._id,
-        text: `Group ${name} created!`,
-      });
+      const { _id, status, sender, text, readBy, createdAt } =
+        await Message.create({
+          sender: req.user._id,
+          text: `Group ${name} created!`,
+        });
 
-      const newMessage = { _id, status, sender, text };
-
+      const newMessage = { _id, status, sender, text, readBy, createdAt };
       const newChat = await Chat.create({
         members: chat.members.map((memb) => {
           console.log(memb.user.toString() === req.user._id.toString());
@@ -80,13 +80,13 @@ export const createChat = async (req: AuthRequest, res: Response) => {
   try {
     const { users, isChatMode, name, message } = req.body;
 
-    const { _id, status, sender, text } = await Message.create({
-      sender: req.user._id,
-      text: message,
-    });
+    const { _id, status, sender, text, readBy, createdAt } =
+      await Message.create({
+        sender: req.user._id,
+        text: message,
+      });
 
-    const newMessage = { _id, status, sender, text };
-
+    const newMessage = { _id, status, sender, text, readBy, createdAt };
     // Формируем участников
     let members;
     if (isChatMode) {
@@ -161,12 +161,12 @@ export const addMemberToChat = async (req: AuthRequest, res: Response) => {
     }
 
     if (!chat.isChatMode) {
-      const { _id, status, sender, text } = await Message.create({
-        sender: req.user._id,
-        text: `Group created!`,
-      });
-      const newMessage = { _id, status, sender, text };
-
+      const { _id, status, sender, text, readBy, createdAt } =
+        await Message.create({
+          sender: req.user._id,
+          text: `Group created!`,
+        });
+      const newMessage = { _id, status, sender, text, readBy, createdAt };
       const newMembers = chat.members.map((memb) => {
         if (memb.user.toString() === req.user._id.toString()) {
           return { ...memb, role: "admin" };
