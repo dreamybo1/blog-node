@@ -167,19 +167,21 @@ export const addMemberToChat = async (req: AuthRequest, res: Response) => {
       });
       const newMessage = { _id, status, sender, text };
 
-      const newChat = await Chat.create({
-        members: chat.members
-          .map((memb) => {
-            if (memb.user.toString() === req.user._id.toString()) {
-              return { ...memb, role: "admin" };
-            }
+      const newMembers = chat.members.map((memb) => {
+        if (memb.user.toString() === req.user._id.toString()) {
+          return { ...memb, role: "admin" };
+        }
 
-            return memb;
-          })
-          .push({
-            user: new mongoose.Types.ObjectId(memberId),
-            role: "member",
-          }),
+        return memb;
+      });
+
+      newMembers.push({
+        user: new mongoose.Types.ObjectId(memberId),
+        role: "member",
+      });
+
+      const newChat = await Chat.create({
+        members: newMembers,
         messages: [newMessage],
         isChatMode: true,
       });
