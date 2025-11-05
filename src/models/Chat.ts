@@ -33,29 +33,38 @@ const ChatSchema: Schema<IChat> = new Schema(
       required: true,
       default: false,
     },
-    messages: [{
-      _id: {
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: "Message",
+    messages: [
+      {
+        _id: {
+          type: Schema.Types.ObjectId,
+          required: true,
+          ref: "Message",
+        },
+        text: {
+          type: String,
+          required: true,
+          ref: "Message",
+        },
+        status: {
+          type: String,
+          enum: ["sent", "read"],
+          required: true,
+          ref: "Message",
+        },
+        sender: {
+          type: Schema.Types.ObjectId,
+          required: true,
+          ref: "Message",
+        },
+        readBy: [
+          {
+            type: Schema.Types.ObjectId,
+            required: true,
+            ref: "Message",
+          },
+        ],
       },
-      text: {
-        type: String,
-        required: true,
-        ref: "Message",
-      },
-      status: {
-        type: String,
-        enum: ["sent", "read"],
-        required: true,
-        ref: "Message",
-      },
-      sender: {
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: "Message",
-      },
-    }],
+    ],
     name: { type: String },
   },
   { timestamps: true }
