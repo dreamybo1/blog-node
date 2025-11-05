@@ -45,6 +45,11 @@ const ChatSchema: Schema<IChat> = new Schema(
           required: true,
           ref: "Message",
         },
+        createdAt: {
+            type: Date,
+            required: true,
+            ref: "Message",
+        },
         status: {
           type: String,
           enum: ["sent", "read"],
