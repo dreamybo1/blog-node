@@ -31,10 +31,12 @@ export const editChatName = async (req: AuthRequest, res: Response) => {
     }
 
     if (!chat.isChatMode) {
-      const message = await Message.create({
+      const { _id, status, sender, text } = await Message.create({
         sender: req.user._id,
         text: `Group ${name} created!`,
       });
+
+      const newMessage = { _id, status, sender, text };
 
       const newChat = await Chat.create({
         members: chat.members.map((memb) => {
@@ -45,7 +47,7 @@ export const editChatName = async (req: AuthRequest, res: Response) => {
           return memb;
         }),
         name, // имя только для беседы
-        messages: [message._id],
+        messages: [newMessage],
         isChatMode: true,
       });
 
@@ -77,10 +79,12 @@ export const createChat = async (req: AuthRequest, res: Response) => {
   try {
     const { users, isChatMode, name, message } = req.body;
 
-    const firstMessage = await Message.create({
+    const { _id, status, sender, text } = await Message.create({
       sender: req.user._id,
       text: message,
     });
+
+    const newMessage = { _id, status, sender, text };
 
     // Формируем участников
     let members;
@@ -101,7 +105,7 @@ export const createChat = async (req: AuthRequest, res: Response) => {
     const chat = await Chat.create({
       members,
       name: isChatMode ? name : undefined, // имя только для беседы
-      messages: [firstMessage._id],
+      messages: [newMessage],
       isChatMode,
     });
 
@@ -156,10 +160,11 @@ export const addMemberToChat = async (req: AuthRequest, res: Response) => {
     }
 
     if (!chat.isChatMode) {
-      const message = await Message.create({
+      const { _id, status, sender, text } = await Message.create({
         sender: req.user._id,
         text: `Group created!`,
       });
+      const newMessage = { _id, status, sender, text };
 
       const newChat = await Chat.create({
         members: chat.members.map((memb) => {
@@ -169,7 +174,7 @@ export const addMemberToChat = async (req: AuthRequest, res: Response) => {
 
           return memb;
         }),
-        messages: [message._id],
+        messages: [newMessage],
         isChatMode: true,
       });
 
@@ -191,7 +196,7 @@ export const addMemberToChat = async (req: AuthRequest, res: Response) => {
       },
       { new: true } // ← ВОЗВРАЩАЕТ обновлённый документ
     );
-    
+
     await user.updateOne({ chats: [...user.chats, chat._id] });
     await user?.save();
 
@@ -311,10 +316,17 @@ export const createMessage = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const { text } = req.body;
 
-    const message = await Message.create({
+    const {
+      _id,
+      status,
+      sender,
+      text: newMsgText,
+    } = await Message.create({
       sender: req.user._id,
       text,
     });
+
+    const newMessage = { _id, status, sender, text: newMsgText };
 
     const chat = await Chat.findById(id);
 
@@ -328,14 +340,14 @@ export const createMessage = async (req: AuthRequest, res: Response) => {
       return;
     }
 
-    if (!message) {
+    if (!newMessage) {
       res.status(403).json(`Message wasn't created`);
       return;
     }
 
-    await chat.updateOne({ messages: [...chat.messages, message._id] });
+    await chat.updateOne({ messages: [...chat.messages, newMessage] });
     await chat.save();
-    res.status(201).json(`Successfully added message ${message._id}`);
+    res.status(201).json(`Successfully added message ${newMessage._id}`);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
@@ -364,19 +376,21 @@ export const changeMessage = async (req: AuthRequest, res: Response) => {
         .json({ error: `User is not a member of chat ${chatId}` });
     }
 
-    const isInChat = chat.messages.some(
+    const isInChatIndex = chat.messages.findIndex(
       // @ts-ignore
-      (msgId) => msgId.toString() === message._id.toString()
+      (msgId) => msgId._id.toString() === message._id.toString()
     );
 
-    if (!isInChat) {
+    if (isInChatIndex === -1) {
       return res
         .status(403)
         .json({ error: `Message does not belong to chat ${chatId}` });
     }
 
+    chat.messages[isInChatIndex].text = text;
     message.text = text;
     await message.save();
+    await chat.save();
 
     return res.status(200).json({ message: "Message updated", data: message });
   } catch (err) {
@@ -417,7 +431,7 @@ export const deleteMessage = async (req: AuthRequest, res: Response) => {
     await chat.updateOne({
       messages: chat.messages.filter(
         // @ts-ignore
-        (chatMessage) => chatMessage.toString() !== message?._id.toString()
+        (chatMessage) => chatMessage._id.toString() !== message?._id.toString()
       ),
     });
     await chat.save();
@@ -449,7 +463,7 @@ export const readMessage = async (req: AuthRequest, res: Response) => {
     if (
       !chat.messages.some(
         // @ts-ignore
-        (chatMessage) => chatMessage.toString() === message?._id.toString()
+        (chatMessage) => chatMessage._id.toString() === message?._id.toString()
       )
     ) {
       res.status(403).json(`Message is not part of chat ${id}`);
@@ -457,6 +471,13 @@ export const readMessage = async (req: AuthRequest, res: Response) => {
       return;
     }
 
+    const messageIndex = chat.messages.findIndex(
+      // @ts-ignore
+      (chatMessage) => chatMessage._id.toString() === message?._id.toString()
+    );
+
+    chat.messages[messageIndex].status = "read";
+    await chat?.save();
     await message?.updateOne({ status: "read" });
     res.status(200).json(`Message ${message?._id} read`);
   } catch (err) {
