@@ -489,6 +489,8 @@ export const readMessage = async (req: AuthRequest, res: Response) => {
     );
 
     chat.messages[messageIndex].status = "read";
+    chat.messages[messageIndex].readBy = [...chat.messages[messageIndex].readBy, req.user._id];
+
 
     await chat?.save();
     await message?.updateOne({
