@@ -7,6 +7,8 @@ export interface IUser extends Document {
   role?: string;
   password?: string;
   chats: mongoose.Types.ObjectId[];
+  isVerified: boolean;
+  isEmailSent: boolean;
 }
 
 const userSchema = new Schema<IUser>(
@@ -22,6 +24,7 @@ const userSchema = new Schema<IUser>(
       default: "user",
     },
     chats: [{ type: Schema.Types.ObjectId, required: true, ref: "Chat" }],
+    isVerified: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
