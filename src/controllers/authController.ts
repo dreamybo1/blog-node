@@ -32,7 +32,7 @@ export const registerUser = async (req: Request, res: Response) => {
     );
     const verifyLink = `${process.env.CLIENT_URL}/verify/${token}`;
 
-    await sendEmail(
+    sendEmail(
       email,
       "Подтверждение почты",
       `
