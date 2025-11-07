@@ -68,9 +68,83 @@ export const verifyEmail = async (req: AuthRequest, res: Response) => {
     } else {
       return res.status(400).json("Invalid token data");
     }
-    res.json({ message: "Почта подтверждена" });
+
+    const newToken = jwt.sign(
+      { id: decoded.id },
+      process.env.JWT_SECRET || "secret",
+      { expiresIn: "7d" }
+    );
+
+    return res.send(`
+      <html lang="ru">
+        <head>
+          <meta charset="UTF-8" />
+          <title>Подтверждение почты</title>
+          <style>
+            body {
+              font-family: system-ui, sans-serif;
+              background-color: #f7f7f7;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              height: 100vh;
+              color: #333;
+              text-align: center;
+            }
+            .box {
+              background: white;
+              padding: 40px 60px;
+              border-radius: 16px;
+              box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+            }
+            .spinner {
+              margin-top: 16px;
+              border: 4px solid #eee;
+              border-top: 4px solid #6B32E7;
+              border-radius: 50%;
+              width: 36px;
+              height: 36px;
+              animation: spin 1s linear infinite;
+            }
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="box">
+            <h2>Почта успешно подтверждена ✅</h2>
+            <p>Вы будете перенаправлены на главную через 3 секунды...</p>
+            <div class="spinner"></div>
+          </div>
+
+          <script>
+            // Сохраняем токен в localStorage
+            localStorage.setItem("token", "${newToken}");
+            
+            // Редирект через 3 секунды
+            setTimeout(() => {
+              window.location.href = "${process.env.CLIENT_URL}";
+            }, 3000);
+          </script>
+        </body>
+      </html>
+    `);
   } catch (err) {
-    res.status(400).json({ message: "Неверный или просроченный токен" });
+    return res.status(400).send(`
+      <html lang="ru">
+        <head>
+          <meta charset="UTF-8" />
+          <title>Ошибка подтверждения</title>
+        </head>
+        <body style="font-family:sans-serif;text-align:center;margin-top:100px">
+          <h2 style="color:red;">Неверный или просроченный токен 😢</h2>
+          <p>Попробуйте запросить новое письмо с подтверждением.</p>
+        </body>
+      </html>
+    `);
   }
 };
 
