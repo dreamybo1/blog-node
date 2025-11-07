@@ -21,7 +21,6 @@ export const registerUser = async (req: Request, res: Response) => {
       email,
       password: hashedPassword,
       isVerified: false,
-      isEmailSent: true,
     });
 
     const token = jwt.sign(

@@ -9,10 +9,12 @@ export async function sendEmail(to: string, subject: string, html: string) {
     },
   });
 
-  await transporter.sendMail({
+  const res = await transporter.sendMail({
     from: `"DreamNet" <${process.env.SMTP_USER}>`,
     to,
     subject,
     html,
   });
+  console.log(res);
+  
 }
