@@ -2,7 +2,9 @@ import { createTransport } from "nodemailer";
 
 export async function sendEmail(to: string, subject: string, html: string) {
   const transporter = createTransport({
-    service: "gmail",
+    host: "smtp.yandex.ru",
+    port: 465,
+    secure: true, // true for 465, false for other ports
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
@@ -16,5 +18,4 @@ export async function sendEmail(to: string, subject: string, html: string) {
     html,
   });
   console.log(res);
-  
 }
