@@ -52,98 +52,95 @@ export const registerUser = async (req: Request, res: Response) => {
   }
 };
 
-// ✅ Подтверждение email
-export const verifyEmail = async (req: AuthRequest, res: Response) => {
+// ✅ Подтверждение email — ТОЛЬКО JSON!
+export const verifyEmail = async (req: Request, res: Response) => {
   try {
-    const decoded = jwt.verify(
-      req.params.token,
-      process.env.JWT_SECRET || "secret"
-    ) as { id: string };
+    const { token } = req.params;
 
-    if (decoded?.id && typeof decoded?.id === "string") {
-      await User.findByIdAndUpdate(decoded.id, {
-        isVerified: true,
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret") as {
+      id: string;
+    };
+
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Пользователь не найден",
       });
-    } else {
-      return res.status(400).json("Invalid token data");
     }
 
-    const newToken = jwt.sign(
-      { id: decoded.id },
+    if (user.isVerified) {
+      return res.json({
+        success: true,
+        message: "Email уже подтверждён",
+        alreadyVerified: true,
+      });
+    }
+
+    user.isVerified = true;
+    await user.save();
+
+    // Генерируем свежий токен для автологина
+    const authToken = jwt.sign(
+      { id: user._id },
       process.env.JWT_SECRET || "secret",
       { expiresIn: "7d" }
     );
 
-    return res.send(`
-      <html lang="ru">
-        <head>
-          <meta charset="UTF-8" />
-          <title>Подтверждение почты</title>
-          <style>
-            body {
-              font-family: system-ui, sans-serif;
-              background-color: #f7f7f7;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              height: 100vh;
-              color: #333;
-              text-align: center;
-            }
-            .box {
-              background: white;
-              padding: 40px 60px;
-              border-radius: 16px;
-              box-shadow: 0 6px 16px rgba(0,0,0,0.1);
-            }
-            .spinner {
-              margin-top: 16px;
-              border: 4px solid #eee;
-              border-top: 4px solid #6B32E7;
-              border-radius: 50%;
-              width: 36px;
-              height: 36px;
-              animation: spin 1s linear infinite;
-            }
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="box">
-            <h2>Почта успешно подтверждена ✅</h2>
-            <p>Вы будете перенаправлены на главную через 3 секунды...</p>
-            <div class="spinner"></div>
-          </div>
-
-          <script>
-            // Сохраняем токен в localStorage
-            localStorage.setItem("token", "${newToken}");
-            
-            // Редирект через 3 секунды
-            setTimeout(() => {
-              window.location.href = "${process.env.CLIENT_URL}";
-            }, 3000);
-          </script>
-        </body>
-      </html>
-    `);
+    res.json({
+      success: true,
+      message: "Email успешно подтверждён!",
+      token: authToken, // ← для автологина
+      redirect: "/", // опционально
+    });
   } catch (err) {
-    return res.status(400).send(`
-      <html lang="ru">
-        <head>
-          <meta charset="UTF-8" />
-          <title>Ошибка подтверждения</title>
-        </head>
-        <body style="font-family:sans-serif;text-align:center;margin-top:100px">
-          <h2 style="color:red;">Неверный или просроченный токен 😢</h2>
-          <p>Попробуйте запросить новое письмо с подтверждением.</p>
-        </body>
-      </html>
-    `);
+    res.status(400).json({
+      success: false,
+      message: "Неверный или просроченный токен",
+    });
+  }
+};
+
+// 🧠 Сброс пароля — ТОЛЬКО JSON!
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret") as {
+      id: string;
+    };
+
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Пользователь не найден",
+      });
+    }
+
+    const hashed = await bcrypt.hash(password, 10);
+    user.password = hashed;
+    await user.save();
+
+    // Генерируем токен для автологина после сброса
+    const authToken = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET || "secret",
+      { expiresIn: "7d" }
+    );
+
+    res.json({
+      success: true,
+      message: "Пароль успешно изменён!",
+      token: authToken,
+      redirect: "/",
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      message: "Неверный или просроченный токен",
+    });
   }
 };
 
@@ -203,18 +200,4 @@ export const forgotPassword = async (req: AuthRequest, res: Response) => {
   );
 
   res.json({ message: "Письмо для восстановления отправлено" });
-};
-
-export const resetPassword = async (req: AuthRequest, res: Response) => {
-  try {
-    const decoded = jwt.verify(
-      req.params.token,
-      process.env.JWT_SECRET || "secret"
-    ) as { id: string };
-    const hashed = await bcrypt.hash(req.body.password, 10);
-    await User.findByIdAndUpdate(decoded.id, { password: hashed });
-    res.json({ message: "Пароль успешно изменён" });
-  } catch (err) {
-    res.status(400).json({ message: "Неверный или просроченный токен" });
-  }
 };
